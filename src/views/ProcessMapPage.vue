@@ -2,8 +2,9 @@
   <div class="map-container">
     <div class="controls">
       <div class="search-box">
-        <input type="text" v-model="searchKeyword" placeholder="搜索地址">
-        <button @click="searchLocation">搜索</button>
+        <input type="text" v-model="lng" placeholder="经度">
+        <input type="text" v-model="lat" placeholder="纬度">
+        <button @click="searchByCoordinate">按坐标查询</button>
       </div>
     </div>
     <div id="baidu-map"></div>
@@ -18,12 +19,16 @@ declare global {
   interface Window { baiduMapCallback?: () => void }
 }
 import { ref, onMounted, onUnmounted } from 'vue';
+import { useRoute } from 'vue-router';
+
+const route = useRoute();
 
 const map = ref<any>(null);
-const searchKeyword = ref('');
 const searchError = ref('');
 let markers: any[] = [];
 let geocoder: any = null;
+const lng = ref('');
+const lat = ref('');
 
 const initMap = () => {
   const container = document.getElementById('baidu-map');
@@ -36,25 +41,38 @@ const initMap = () => {
   geocoder = new BMap.Geocoder();
 };
 
-const searchLocation = () => {
-  if (!searchKeyword.value.trim()) return;
-  geocoder.getPoint(searchKeyword.value, (point: any) => {
-    if (point) {
-      map.value.centerAndZoom(point, 15);
-      clearMarkers();
-      const marker = new BMap.Marker(point);
-      map.value.addOverlay(marker);
-      markers.push(marker);
-      searchError.value = '';
-    } else {
-      searchError.value = '未找到该地址';
-    }
-  });
+const searchByCoordinate = () => {
+  const longitude = parseFloat(lng.value);
+  const latitude = parseFloat(lat.value);
+  if (isNaN(longitude) || isNaN(latitude)) {
+    searchError.value = '请输入有效的经纬度';
+    return;
+  }
+  const point = new BMap.Point(longitude, latitude);
+  map.value.centerAndZoom(point, 15);
+  clearMarkers();
+  const marker = new BMap.Marker(point);
+  map.value.addOverlay(marker);
+  markers.push(marker);
+  searchError.value = '';
 };
 
 const clearMarkers = () => {
   markers.forEach(marker => map.value.removeOverlay(marker));
   markers = [];
+};
+
+const addBatchMarkers = (pointsArr: Array<{lng: number, lat: number}>) => {
+  if (!Array.isArray(pointsArr)) return;
+  clearMarkers();
+  pointsArr.forEach(({lng, lat}) => {
+    if (typeof lng === 'number' && typeof lat === 'number') {
+      const point = new BMap.Point(lng, lat);
+      const marker = new BMap.Marker(point);
+      map.value.addOverlay(marker);
+      markers.push(marker);
+    }
+  });
 };
 
 const loadMapScript = (): Promise<void> => {
@@ -78,6 +96,19 @@ onMounted(async () => {
   try {
     await loadMapScript();
     initMap();
+    // 检查路由参数points
+    if (route.query.points) {
+      let pointsArr = [];
+      try {
+        pointsArr = JSON.parse(route.query.points as string);
+      } catch {}
+      addBatchMarkers(pointsArr);
+      // 若有点，自动居中到第一个点
+      if (pointsArr.length > 0) {
+        const first = pointsArr[0];
+        map.value.centerAndZoom(new BMap.Point(first.lng, first.lat), 12);
+      }
+    }
   } catch (error) {
     searchError.value = '地图加载失败';
     console.error(error);
@@ -107,8 +138,8 @@ onUnmounted(() => {
 }
 .controls {
   position: absolute;
-  top: 20px;
-  left: 20px;
+  top: 10px;
+  left: 10px;
   z-index: 1000;
   display: flex;
   flex-direction: column;
@@ -117,6 +148,7 @@ onUnmounted(() => {
   background: white;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  width: 320px;
 }
 .controls button {
   padding: 8px 16px;
@@ -125,16 +157,21 @@ onUnmounted(() => {
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  font-size: 14px;
+  min-width: 60px;
 }
 .search-box {
   display: flex;
   gap: 10px;
+  width: 100%;
 }
 .search-box input {
   flex: 1;
   padding: 8px;
   border: 1px solid #ddd;
   border-radius: 4px;
+  font-size: 14px;
+  min-width: 0;
 }
 #baidu-map {
   width: 100%;

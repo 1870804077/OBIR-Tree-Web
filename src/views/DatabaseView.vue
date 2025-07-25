@@ -7,6 +7,7 @@
 				:changePage="changePage">
 				<template #toolbarBtn>
 					<el-button type="warning" :icon="CirclePlusFilled" @click="visible = true">新增</el-button>
+					<el-button type="primary" @click="showAllOnMap">在地图上显示</el-button>
 				</template>
 				<template #coordinates="{ rows }">
 					{{ rows.latitude }}, {{ rows.longitude }}
@@ -139,6 +140,19 @@ const handleView = (row: TableItem) => {
 const handleDelete = (row: TableItem) => {
 	ElMessage.success('删除成功');
 }
+
+const showAllOnMap = () => {
+  // 只传递经纬度，过滤掉无效数据
+  const points = tableData.value
+    .filter(row => row.latitude && row.longitude)
+    .map(row => ({ lng: Number(row.longitude), lat: Number(row.latitude) }));
+  router.push({
+    path: '/project-search/map',
+    query: {
+      points: JSON.stringify(points)
+    }
+  });
+};
 
 onMounted(() => {
     getData();

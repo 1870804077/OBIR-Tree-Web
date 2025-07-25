@@ -10,6 +10,7 @@
       <div class="search-container">
         <input type="text" placeholder="输入搜索关键词..." class="search-input">
         <button class="search-button">搜索</button>
+        <button class="search-button" @click="showOnMap">在地图上显示</button>
       </div>
     </div>
     <div class="section process-node-graph">
@@ -24,6 +25,23 @@
 </template>
 
 <script setup lang="ts">
+import { useRouter } from 'vue-router';
+const router = useRouter();
+// 模拟数据库数据
+const points = [
+  { lng: 116.404, lat: 39.915 },
+  { lng: 117.200, lat: 39.133 },
+  { lng: 118.100, lat: 36.900 }
+];
+const showOnMap = () => {
+  // 通过路由参数传递经纬度数组
+  router.push({
+    path: '/process-map',
+    query: {
+      points: JSON.stringify(points)
+    }
+  });
+};
 // 保留后续逻辑扩展
 </script>
 
