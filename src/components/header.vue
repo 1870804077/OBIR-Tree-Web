@@ -2,8 +2,8 @@
     <div class="header">
         <!-- 折叠按钮 -->
         <div class="header-left">
-            <img class="logo" src="../assets/img/logo.svg" alt="" />
-            <div class="web-title">后台管理系统</div>
+            <img class="logo" src="/favicon.ico" alt="logo" />
+            <div class="web-title">OBIR-Tree</div>
             <div class="collapse-btn" @click="collapseChage">
                 <el-icon v-if="sidebar.collapse">
                     <Expand />
@@ -20,6 +20,13 @@
                         <i class="el-icon-lx-skin"></i>
                     </el-tooltip>
                 </div>
+                <div class="btn-icon" @click="setFullScreen">
+                    <el-tooltip effect="dark" content="全屏" placement="bottom">
+                        <i class="el-icon-lx-full"></i>
+                    </el-tooltip>
+                </div>
+                <!-- 以下内容已隐藏：消息提示、头像、用户名下拉菜单 -->
+                <!--
                 <div class="btn-icon" @click="router.push('/ucenter')">
                     <el-tooltip
                         effect="dark"
@@ -30,14 +37,7 @@
                     </el-tooltip>
                     <span class="btn-bell-badge" v-if="message"></span>
                 </div>
-                <div class="btn-icon" @click="setFullScreen">
-                    <el-tooltip effect="dark" content="全屏" placement="bottom">
-                        <i class="el-icon-lx-full"></i>
-                    </el-tooltip>
-                </div>
-                <!-- 用户头像 -->
                 <el-avatar class="user-avator" :size="30" :src="imgurl" />
-                <!-- 用户名下拉菜单 -->
                 <el-dropdown class="user-name" trigger="click" @command="handleCommand">
                     <span class="el-dropdown-link">
                         {{ username }}
@@ -58,6 +58,7 @@
                         </el-dropdown-menu>
                     </template>
                 </el-dropdown>
+                -->
             </div>
         </div>
     </div>

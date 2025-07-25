@@ -298,7 +298,7 @@ export const mapOptions = {
         trigger: 'item',
     },
     geo: {
-        map: 'china',
+        map: 'world', // 切换为世界地图
         roam: false,
         emphasis: {
             label: {
@@ -322,23 +322,18 @@ export const mapOptions = {
             name: '地域分布',
             type: 'map',
             coordinateSystem: 'geo',
-            map: 'china',
+            map: 'world', // 切换为世界地图
             data: [
-                { name: '北京', value: 100 },
-                { name: '上海', value: 100 },
-                { name: '广东', value: 100 },
-                { name: '浙江', value: 90 },
-                { name: '江西', value: 80 },
-                { name: '山东', value: 70 },
-                { name: '广西', value: 60 },
-                { name: '河南', value: 50 },
-                { name: '河南', value: 40 },
-                { name: '青海', value: 70 },
-                { name: '河南', value: 30 },
-                { name: '黑龙江', value: 20 },
-                { name: '新疆', value: 20 },
-                { name: '云南', value: 20 },
-                { name: '甘肃', value: 20 },
+                { name: 'China', value: 100 },
+                { name: 'United States', value: 90 },
+                { name: 'India', value: 80 },
+                { name: 'Russia', value: 70 },
+                { name: 'Brazil', value: 60 },
+                { name: 'Australia', value: 50 },
+                { name: 'Canada', value: 40 },
+                { name: 'France', value: 30 },
+                { name: 'Germany', value: 20 },
+                { name: 'United Kingdom', value: 10 },
             ],
         },
     ],

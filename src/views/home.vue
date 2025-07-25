@@ -3,12 +3,12 @@
         <v-header />
         <v-sidebar />
         <div class="content-box" :class="{ 'content-collapse': sidebar.collapse }">
-            <v-tabs></v-tabs>
+      <v-tabs />
             <div class="content">
                 <router-view v-slot="{ Component }">
                     <transition name="move" mode="out-in">
                         <keep-alive :include="tabs.nameList">
-                            <component :is="Component"></component>
+              <component :is="Component" />
                         </keep-alive>
                     </transition>
                 </router-view>
@@ -26,7 +26,6 @@ import vTabs from '@/components/tabs.vue';
 const sidebar = useSidebarStore();
 const tabs = useTabsStore();
 </script>
-
 <style>
 .wrapper {
     height: 100vh;
@@ -44,7 +43,6 @@ const tabs = useTabsStore();
     background: #eef0fc;
     overflow: hidden;
 }
-
 .content {
     width: auto;
     height: 100%;
@@ -52,11 +50,9 @@ const tabs = useTabsStore();
     overflow-y: scroll;
     box-sizing: border-box;
 }
-
 .content::-webkit-scrollbar {
     width: 0;
 }
-
 .content-collapse {
     left: 65px;
 }

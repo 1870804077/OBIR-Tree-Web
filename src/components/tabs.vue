@@ -11,11 +11,8 @@
         </el-tabs>
         <div class="Tabs-close-box">
             <el-dropdown @command="handleTags">
-                <el-button size="small" type="primary" plain>
-                    标签选项
-                    <el-icon class="el-icon--right">
-                        <arrow-down />
-                    </el-icon>
+                <el-button size="small" type="primary" plain circle>
+                    <el-icon><Setting /></el-icon>
                 </el-button>
                 <template #dropdown>
                     <el-dropdown-menu size="small">
@@ -33,6 +30,7 @@
 import { ref, watch } from 'vue';
 import { useTabsStore } from '../store/tabs';
 import { onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router';
+import { Setting } from '@element-plus/icons-vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -139,7 +137,7 @@ watch(
     box-sizing: border-box;
     padding-top: 1px;
     text-align: center;
-    width: 110px;
+    width: 50px;
     height: 30px;
     background: #fff;
     box-shadow: -3px 0 15px 3px rgba(0, 0, 0, 0.1);

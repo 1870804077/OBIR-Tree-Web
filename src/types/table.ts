@@ -1,9 +1,6 @@
 export interface TableItem {
-    id: number;
-    name: string;
-    thumb: string;
-    money: number;
-    state: string;
-    date: string;
-    address: string;
+    id: string;
+    value: string;
+    latitude: string;
+    longitude: string;
 }

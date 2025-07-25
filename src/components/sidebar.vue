@@ -10,10 +10,10 @@
         >
             <template v-for="item in menuData">
                 <template v-if="item.children">
-                    <el-sub-menu :index="item.index" :key="item.index" v-permiss="item.id">
+                    <el-sub-menu :index="item.index" :key="item.index">
                         <template #title>
                             <el-icon>
-                                <component :is="item.icon"></component>
+                                <component :is="iconMap[item.icon]" />
                             </el-icon>
                             <span>{{ item.title }}</span>
                         </template>
@@ -22,7 +22,6 @@
                                 v-if="subItem.children"
                                 :index="subItem.index"
                                 :key="subItem.index"
-                                v-permiss="item.id"
                             >
                                 <template #title>{{ subItem.title }}</template>
                                 <el-menu-item
@@ -33,16 +32,16 @@
                                     {{ threeItem.title }}
                                 </el-menu-item>
                             </el-sub-menu>
-                            <el-menu-item v-else :index="subItem.index" v-permiss="item.id">
+                            <el-menu-item v-else :index="subItem.index">
                                 {{ subItem.title }}
                             </el-menu-item>
                         </template>
                     </el-sub-menu>
                 </template>
                 <template v-else>
-                    <el-menu-item :index="item.index" :key="item.index" v-permiss="item.id">
+                    <el-menu-item :index="item.index" :key="item.index">
                         <el-icon>
-                            <component :is="item.icon"></component>
+                            <component :is="iconMap[item.icon]" />
                         </el-icon>
                         <template #title>{{ item.title }}</template>
                     </el-menu-item>
@@ -57,6 +56,14 @@ import { computed } from 'vue';
 import { useSidebarStore } from '../store/sidebar';
 import { useRoute } from 'vue-router';
 import { menuData } from '@/components/menu';
+// 引入 Element Plus 所需图标
+import { Odometer, Calendar, PieChart } from '@element-plus/icons-vue';
+
+const iconMap: Record<string, any> = {
+  Odometer,
+  Calendar,
+  PieChart,
+};
 
 const route = useRoute();
 const onRoutes = computed(() => {
