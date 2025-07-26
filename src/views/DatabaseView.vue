@@ -2,7 +2,7 @@
 	<div>
 		<TableSearch :query="query" :options="searchOpt" :search="handleSearch" />
 		<div class="container">
-			<TableCustom :columns="columns" :tableData="tableData" :total="page.total" :viewFunc="handleView"
+			<TableCustom :columns="columns" :tableData="tableData" :total="page.total" :viewFunc="handleViewSimple"
 				:delFunc="handleDelete" :editFunc="handleEdit" :refresh="getData" :currentPage="page.index"
 				:changePage="changePage">
 				<template #toolbarBtn>
@@ -125,15 +125,27 @@ const viewData = ref({
 	list: []
 });
 const handleView = (row: TableItem) => {
-	// 跳转到地图检索界面并搜索坐标数据
-	router.push({
-		path: '/project-search/map',
-		query: {
-			latitude: row.latitude,
-			longitude: row.longitude,
-			value: row.value
-		}
-	});
+  // 跳转到地图检索界面并显示该点
+  router.push({
+    path: '/project-search/map',
+    query: {
+      lng: row.longitude,
+      lat: row.latitude
+    }
+  });
+};
+
+// 新增：简单查看方法，不显示区域圈
+const handleViewSimple = (row: TableItem) => {
+  // 跳转到地图检索界面并显示该点，但不显示区域圈
+  router.push({
+    path: '/project-search/map',
+    query: {
+      lng: row.longitude,
+      lat: row.latitude,
+      simple: 'true' // 添加标识，表示简单查看模式
+    }
+  });
 };
 
 // 删除相关
@@ -141,11 +153,10 @@ const handleDelete = (row: TableItem) => {
 	ElMessage.success('删除成功');
 }
 
-const showAllOnMap = () => {
-  // 只传递经纬度，过滤掉无效数据
-  const points = tableData.value
-    .filter(row => row.latitude && row.longitude)
-    .map(row => ({ lng: Number(row.longitude), lat: Number(row.latitude) }));
+const showAllOnMap = async () => {
+  // 直接读取预生成的points.json，提升性能
+  const res = await fetch('/mock/points.json');
+  const points = await res.json();
   router.push({
     path: '/project-search/map',
     query: {

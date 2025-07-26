@@ -26,9 +26,9 @@ const routes: RouteRecordRaw[] = [
         children: [
           {
             path: 'data',
-            name: 'ProcessDataDisplay',
-            component: () => import('@/views/ProcessDataDisplay.vue'),
-            meta: { title: '检索数据展示' },
+            name: 'ProcessFlowDisplay',
+            component: () => import('@/views/ProcessFlowDisplay.vue'),
+            meta: { title: '检索流程展示' },
           },
           {
             path: 'map',

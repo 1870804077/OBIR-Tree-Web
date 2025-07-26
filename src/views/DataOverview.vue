@@ -81,15 +81,15 @@
                 <el-card shadow="hover" :body-style="{ height: '380px' }">
                     <div class="card-header">
                         <p class="card-header-title">检索排行</p>
-                        <p class="card-header-desc">被检索次数排行Top5</p>
+                        <p class="card-header-desc">数据项被检索次数排行Top5</p>
                     </div>
-                    <!-- <div>
+                    <div>
                         <div class="rank-item" v-for="(rank, index) in ranks">
                             <div class="rank-item-avatar">{{ index + 1 }}</div>
                             <div class="rank-item-content">
                                 <div class="rank-item-top">
                                     <div class="rank-item-title">{{ rank.title }}</div>
-                                    <div class="rank-item-desc">销量：{{ rank.value }}</div>
+                                    <div class="rank-item-desc">被检索次数：{{ rank.value }}</div>
                                 </div>
                                 <el-progress
                                     :show-text="false"
@@ -100,7 +100,7 @@
                                 />
                             </div>
                         </div>
-                    </div> -->
+                    </div>
                 </el-card>
             </el-col>
         </el-row>

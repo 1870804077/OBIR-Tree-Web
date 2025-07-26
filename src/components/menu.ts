@@ -23,7 +23,7 @@ export const menuData: Menus[] = [
         id: '31',
         pid: '3',
         index: '/project-search/data',
-        title: '检索数据展示',
+        title: '检索流程展示',
       },
       {
         id: '32',
