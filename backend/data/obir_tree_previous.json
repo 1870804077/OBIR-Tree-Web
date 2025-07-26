@@ -1,0 +1,107 @@
+{
+  "nodes": [
+    {
+      "id": "root",
+      "value": "Root",
+      "level": 0,
+      "status": "active"
+    },
+    {
+      "id": "node1",
+      "value": "Node1",
+      "level": 1,
+      "status": "active"
+    },
+    {
+      "id": "node2",
+      "value": "Node2",
+      "level": 1,
+      "status": "active"
+    },
+    {
+      "id": "node3",
+      "value": "Node3",
+      "level": 1,
+      "status": "active"
+    },
+    {
+      "id": "node1_1",
+      "value": "Node1.1",
+      "level": 2,
+      "status": "active"
+    },
+    {
+      "id": "node1_2",
+      "value": "Node1.2",
+      "level": 2,
+      "status": "active"
+    },
+    {
+      "id": "node2_1",
+      "value": "Node2.1",
+      "level": 2,
+      "status": "active"
+    },
+    {
+      "id": "node3_1",
+      "value": "Node3.1",
+      "level": 2,
+      "status": "active"
+    },
+    {
+      "id": "node3_2",
+      "value": "Node3.2",
+      "level": 2,
+      "status": "inactive"
+    },
+    {
+      "id": "old_node",
+      "value": "OldNode",
+      "level": 2,
+      "status": "active"
+    }
+  ],
+  "edges": [
+    {
+      "from": "root",
+      "to": "node1"
+    },
+    {
+      "from": "root",
+      "to": "node2"
+    },
+    {
+      "from": "root",
+      "to": "node3"
+    },
+    {
+      "from": "node1",
+      "to": "node1_1"
+    },
+    {
+      "from": "node1",
+      "to": "node1_2"
+    },
+    {
+      "from": "node2",
+      "to": "node2_1"
+    },
+    {
+      "from": "node3",
+      "to": "node3_1"
+    },
+    {
+      "from": "node3",
+      "to": "node3_2"
+    },
+    {
+      "from": "node3",
+      "to": "old_node"
+    }
+  ],
+  "metadata": {
+    "timestamp": "2024-01-15T10:25:00Z",
+    "version": "1.0",
+    "description": "前一时刻的OBIR-Tree结构"
+  }
+} 

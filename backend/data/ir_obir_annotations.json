@@ -1,0 +1,64 @@
+{
+  "annotations": [
+    {
+      "id": "mapping_1",
+      "type": "mapping",
+      "title": "根节点映射关系",
+      "description": "IR-Tree的根节点映射到OBIR-Tree的根节点，保持树形结构的顶层一致性。",
+      "details": {
+        "IR节点": "ir_root",
+        "OBIR节点": "obir_root",
+        "映射类型": "一对一映射",
+        "加密状态": "已加密"
+      }
+    },
+    {
+      "id": "mapping_2",
+      "type": "mapping",
+      "title": "内部节点映射",
+      "description": "IR-Tree的内部节点映射到OBIR-Tree的对应节点，保持层级结构。",
+      "details": {
+        "IR节点": "ir_node1, ir_node2",
+        "OBIR节点": "obir_node1, obir_node2",
+        "映射类型": "层级映射",
+        "加密状态": "已加密"
+      }
+    },
+    {
+      "id": "mapping_3",
+      "type": "mapping",
+      "title": "叶子节点映射",
+      "description": "IR-Tree的叶子节点映射到OBIR-Tree的叶子节点，数据内容被加密存储。",
+      "details": {
+        "IR节点": "ir_leaf1, ir_leaf2",
+        "OBIR节点": "obir_leaf1, obir_leaf2",
+        "映射类型": "数据映射",
+        "加密状态": "已加密"
+      }
+    },
+    {
+      "id": "sgx_key_1",
+      "type": "ir",
+      "title": "SGX密钥管理",
+      "description": "SGX环境中的密钥管理，负责解密IR-Tree结构并生成映射关系。",
+      "details": {
+        "密钥类型": "对称密钥",
+        "密钥长度": "256位",
+        "加密算法": "AES-256",
+        "状态": "已生成"
+      }
+    },
+    {
+      "id": "sgx_key_2",
+      "type": "obir",
+      "title": "OBIR索引映射",
+      "description": "将IR-Tree的索引结构映射为OBIR-Tree的加密索引结构。",
+      "details": {
+        "映射算法": "Oblivious映射",
+        "索引类型": "加密索引",
+        "虚拟化": "已启用",
+        "状态": "映射完成"
+      }
+    }
+  ]
+} 

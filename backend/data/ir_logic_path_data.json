@@ -1,0 +1,110 @@
+{
+  "nodes": [
+    {
+      "id": "root",
+      "name": "根节点",
+      "level": 0,
+      "type": "root"
+    },
+    {
+      "id": "node1",
+      "name": "内部节点1",
+      "level": 1,
+      "type": "internal"
+    },
+    {
+      "id": "node2",
+      "name": "内部节点2",
+      "level": 1,
+      "type": "internal"
+    },
+    {
+      "id": "node3",
+      "name": "内部节点3",
+      "level": 1,
+      "type": "internal"
+    },
+    {
+      "id": "leaf1",
+      "name": "叶子节点1",
+      "level": 2,
+      "type": "leaf"
+    },
+    {
+      "id": "leaf2",
+      "name": "叶子节点2",
+      "level": 2,
+      "type": "leaf"
+    },
+    {
+      "id": "leaf3",
+      "name": "叶子节点3",
+      "level": 2,
+      "type": "leaf"
+    },
+    {
+      "id": "leaf4",
+      "name": "叶子节点4",
+      "level": 2,
+      "type": "leaf"
+    },
+    {
+      "id": "leaf5",
+      "name": "叶子节点5",
+      "level": 2,
+      "type": "leaf"
+    },
+    {
+      "id": "leaf6",
+      "name": "叶子节点6",
+      "level": 2,
+      "type": "leaf"
+    }
+  ],
+  "edges": [
+    {
+      "from": "root",
+      "to": "node1"
+    },
+    {
+      "from": "root",
+      "to": "node2"
+    },
+    {
+      "from": "root",
+      "to": "node3"
+    },
+    {
+      "from": "node1",
+      "to": "leaf1"
+    },
+    {
+      "from": "node1",
+      "to": "leaf2"
+    },
+    {
+      "from": "node2",
+      "to": "leaf3"
+    },
+    {
+      "from": "node2",
+      "to": "leaf4"
+    },
+    {
+      "from": "node3",
+      "to": "leaf5"
+    },
+    {
+      "from": "node3",
+      "to": "leaf6"
+    }
+  ],
+  "logic_path": ["root", "node2", "leaf4"],
+  "query_info": {
+    "query_keyword": "OBIR-Tree查询",
+    "timestamp": "2024-01-15 14:30:25",
+    "session_id": "sess_20240115_143025",
+    "user_id": "user_12345",
+    "query_type": "精确匹配"
+  }
+} 

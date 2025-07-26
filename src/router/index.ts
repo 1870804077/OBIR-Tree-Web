@@ -49,6 +49,12 @@ const routes: RouteRecordRaw[] = [
         meta: { title: '主题设置' },
       },
       {
+        path: 'obir-tree-realtime',
+        name: 'OBIRTreeRealtime',
+        component: () => import('@/views/OBIRTreeRealtimePage.vue'),
+        meta: { title: 'OBIR-Tree实时路径' },
+      },
+      {
         path: '',
         redirect: 'data-overview',
       },

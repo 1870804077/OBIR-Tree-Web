@@ -213,32 +213,38 @@ const avgSearchTime = ref(0); // 平均搜索耗时(ms)
 const activities = [
     {
         content: '最新进度',
-        description: '检索功能设计中',
+        description: '前后端连接调试中',
         timestamp: '30分钟前',
+        color: '#00bcd4',
+    },
+    {
+        content: '检索流程图',
+        description: '流程图框架搭建完毕,内部信息设计中',
+        timestamp: '2天前',
         color: '#00bcd4',
     },
     {
         content: '地图测试',
         description: '地图数据显示功能正常,可以使用',
-        timestamp: '15天前',
+        timestamp: '7天前',
         color: '#1ABC9C',
     },
     {
         content: '测试数据上传',
         description: '测试数据上传成功,数据量10000条',
-        timestamp: '19天前',
+        timestamp: '11天前',
         color: '#3f51b5',
     },
     {
         content: '数据库连接',
         description: '数据库连接成功,调试正常',
-        timestamp: '21天前',
+        timestamp: '15天前',
         color: '#f44336',
     },
     {
-        content: '页面上线',
-        description: '数据管理页面与数据库页面上线',
-        timestamp: '31天前',
+        content: '页面初步搭建',
+        description: '数据管理页面与数据库页面初步框架搭建',
+        timestamp: '21天前',
         color: '#009688',
     },
 ];

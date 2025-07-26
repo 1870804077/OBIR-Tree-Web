@@ -1,9 +1,15 @@
 <template>
   <div class="data-display-container">
     <div class="section obir-tree-container">
-      <h3>OBIR_Tree展示</h3>
-      <div class="tree-placeholder">
-        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMjUwIiBmaWxsPSJ3aGl0ZSI+PGNpcmNsZSBjeD0iMTUwIiBjeT0iMTI1IiByPSI4MCIgZmlsbD0iI2Y5ZjlmOSIvPjwvc3ZnPg==" alt="空白图" class="blank-image">
+      <h3>OBIR-Tree实时路径展示</h3>
+      <div class="tree-placeholder" @click="goToOBIRTreeRealtime">
+        <div v-if="obirTreeSVG && !obirTreeLoading" class="obir-tree-svg" v-html="obirTreeSVG"></div>
+        <div v-else-if="obirTreeLoading" class="obir-tree-loading">
+          <p>加载中...</p>
+        </div>
+        <div v-else class="obir-tree-error">
+          <p>加载失败</p>
+        </div>
       </div>
     </div>
     <div class="section search-bar">
@@ -11,8 +17,36 @@
         <input type="text" v-model="searchText" placeholder="输入搜索关键词..." class="search-input">
         <input type="text" v-model="lng" placeholder="经度" class="search-input coord-input">
         <input type="text" v-model="lat" placeholder="纬度" class="search-input coord-input">
-        <button class="search-button">搜索</button>
+        <button class="search-button" @click="performSearch">搜索</button>
         <button class="search-button" @click="showOnMap">在地图上显示</button>
+      </div>
+    </div>
+    
+    <!-- 搜索结果框 -->
+    <div v-if="searchResults.length > 0" class="section search-results">
+      <div class="results-header">
+        <h3>搜索结果</h3>
+        <button class="toggle-btn" @click="toggleResults">
+          {{ resultsExpanded ? '收起' : '展开' }}
+        </button>
+      </div>
+      <div v-show="resultsExpanded" class="results-content">
+        <div class="results-list">
+          <div v-for="(result, index) in searchResults" :key="index" class="result-item">
+            <div class="result-header">
+              <h4 class="result-title">{{ result.title }}</h4>
+              <div class="result-meta">
+                <span class="relevance">相关度: {{ result.relevance }}%</span>
+                <span class="distance">距离: {{ result.distance }}km</span>
+              </div>
+            </div>
+            <p class="result-description">{{ result.description }}</p>
+            <div class="result-footer">
+              <span class="location">📍 {{ result.location }}</span>
+              <span class="type">🏷️ {{ result.type }}</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
     <div class="section process-node-graph">
@@ -56,9 +90,45 @@
           </div>
           <div class="popup-content">
             <div class="desc">{{ popup.node?.desc }}</div>
-            <!-- 这里可以放置小流程图等组件 -->
-            <div class="component-placeholder">
-              <!-- 未来组件区域 -->
+            <!-- 根据节点类型显示不同组件 -->
+            <div v-if="popup.node?.name === '数据预处理与初始化'" class="component-area">
+              <h5>IR-Tree结构图</h5>
+              <IRTreeSVG :key="irTreeKey" />
+            </div>
+            <div v-else-if="popup.node?.name === 'SGX密钥管理与索引映射'" class="component-area">
+              <h5>IR-OBIR关系图</h5>
+              <IR_OBIR_RelationSVG :key="irObirKey" />
+            </div>
+            <div v-else-if="popup.node?.name === '数据加密存储'" class="component-area">
+              <h5>存储状态</h5>
+              <StorageStatusDisplay />
+            </div>
+            <div v-else-if="popup.node?.name === '用户加密查询请求'" class="component-area">
+              <h5>查询参数</h5>
+              <QueryParamDisplay />
+            </div>
+            <div v-else-if="popup.node?.name === 'SGX查询处理'" class="component-area">
+              <h5>逻辑路径</h5>
+              <IRLogicPathSVG :key="irLogicPathKey" />
+            </div>
+            <div v-else-if="popup.node?.name === 'Oblivious访问与剪枝'" class="component-area">
+              <h5>访问与剪枝</h5>
+              <ObliviousAccessDisplay />
+            </div>
+            <div v-else-if="popup.node?.name === 'STASH/桶更新与RDT重置'" class="component-area">
+              <h5>STASH与RDT</h5>
+              <StashRDTDisplay />
+            </div>
+            <div v-else-if="popup.node?.name === '结果加密返回'" class="component-area">
+              <h5>加密返回</h5>
+              <ResultEncryptionDisplay />
+            </div>
+            <div v-else-if="popup.node?.name === '客户端解密与结果呈现'" class="component-area">
+              <h5>解密与呈现</h5>
+              <QueryResultDisplay />
+            </div>
+            <div v-else class="component-placeholder">
+              <!-- 其他节点的组件区域 -->
             </div>
           </div>
         </div>
@@ -70,7 +140,130 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import IRTreeSVG from '@/components/IRTreeSVG.vue';
+import IR_OBIR_RelationSVG from '@/components/IR_OBIR_RelationSVG.vue';
+import StorageStatusDisplay from '@/components/StorageStatusDisplay.vue';
+import QueryParamDisplay from '@/components/QueryParamDisplay.vue';
+import IRLogicPathSVG from '@/components/IRLogicPathSVG.vue';
+import ObliviousAccessDisplay from '@/components/ObliviousAccessDisplay.vue';
+import StashRDTDisplay from '@/components/StashRDTDisplay.vue';
+import ResultEncryptionDisplay from '@/components/ResultEncryptionDisplay.vue';
+import QueryResultDisplay from '@/components/QueryResultDisplay.vue';
+
 const router = useRouter();
+
+// OBIR-Tree实时路径相关
+const obirTreeSVG = ref('');
+const obirTreeLoading = ref(true);
+
+// 加载OBIR-Tree SVG
+const loadOBIRTreeSVG = async () => {
+  try {
+    obirTreeLoading.value = true;
+    const response = await fetch('/api/obir-tree-realtime', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        currentFile: 'obir_tree_current.json',
+        previousFile: 'obir_tree_previous.json'
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    if (result.success) {
+      obirTreeSVG.value = result.svg;
+    } else {
+      throw new Error(result.error || '获取OBIR-Tree数据失败');
+    }
+  } catch (err) {
+    console.error('加载OBIR-Tree SVG失败:', err);
+    obirTreeSVG.value = '';
+  } finally {
+    obirTreeLoading.value = false;
+  }
+};
+
+// 跳转到OBIR-Tree实时路径页面
+const goToOBIRTreeRealtime = () => {
+  router.push('/obir-tree-realtime');
+};
+
+// 组件挂载时加载OBIR-Tree数据
+loadOBIRTreeSVG();
+
+// 搜索相关数据
+const searchResults = ref([]);
+const resultsExpanded = ref(true);
+
+// IR-Tree结构图刷新
+const irTreeKey = ref(0);
+const refreshIRTreeSVG = () => { irTreeKey.value++; };
+// IR-OBIR关系图刷新
+const irObirKey = ref(0);
+const refreshIRObirRelationSVG = () => { irObirKey.value++; };
+// 逻辑路径刷新
+const irLogicPathKey = ref(0);
+const refreshIRLogicPathSVG = () => { irLogicPathKey.value++; };
+// 其它节点如有刷新方法可继续添加
+
+// 执行搜索
+const performSearch = async () => {
+  try {
+    // 调用后端API获取搜索结果
+    const response = await fetch('/api/query-results', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query: searchText.value,
+        lng: lng.value,
+        lat: lat.value,
+        topK: 5
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    if (result.success) {
+      searchResults.value = result.results;
+      resultsExpanded.value = true;
+      // 发送信号给OBIR-Tree实时路径更新
+      updateOBIRTreePath();
+      // 刷新所有流程节点相关数据
+      refreshIRTreeSVG();
+      refreshIRObirRelationSVG();
+      refreshIRLogicPathSVG();
+    } else {
+      throw new Error(result.error || '搜索失败');
+    }
+  } catch (err) {
+    console.error('搜索失败:', err);
+    alert('搜索失败，请重试');
+  }
+};
+
+// 切换结果框展开/收起
+const toggleResults = () => {
+  resultsExpanded.value = !resultsExpanded.value;
+};
+
+// 更新OBIR-Tree实时路径
+const updateOBIRTreePath = async () => {
+  try {
+    // 这里可以调用后端API更新OBIR-Tree数据
+    // 或者发送信号给OBIR-Tree组件重新加载数据
+    await loadOBIRTreeSVG();
+  } catch (err) {
+    console.error('更新OBIR-Tree路径失败:', err);
+  }
+};
+
 const lng = ref('');
 const lat = ref('');
 const searchText = ref('');
@@ -127,7 +320,7 @@ const mindmapNodes = Array.from({length: nodeCount}, (_, i) => {
     '客户端准备空间文本数据，分块加密，构建IR-tree索引，生成映射关系，上传加密数据和密钥。',
     'SGX远程证明，密钥解密，IR-tree映射为OBIR-tree，分配物理路径，虚拟块填充，生成加密RDT。',
     'EDB存储加密数据块、RDT、虚拟块，隐藏真实分布，元数据公开但内容安全。',
-    '客户端加密查询参数和目标路径，发送至云端，SGX验证合法性并解密。',
+    '客户端加密查询参数，发送至云端，SGX验证合法性以及解密之后使用IR-Tree元数据得到逻辑路径。',
     'SGX解密查询参数，获取目标路径，准备Oblivious访问。',
     'SGX读取加密块，解密RDT，筛选高相关节点，剪枝无关节点。',
     '目标节点暂存STASH，非目标节点重加密写回，虚拟块填充，RDT重置并加密写回EDB。',
@@ -161,9 +354,11 @@ function onSvgMouseMove(e) {
   }
 }
 const popup = ref({ show: false, node: null });
+
 function onNodeClick(node) {
   popup.value = { show: true, node };
 }
+
 function closePopup() {
   popup.value = { show: false, node: null };
 }
@@ -211,10 +406,44 @@ h3 {
 .tree-placeholder {
   height: 250px;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   background-color: #f9f9f9;
   border-radius: 8px;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.tree-placeholder:hover {
+  background-color: #f0f8ff;
+  border-color: #4CAF50;
+}
+
+.obir-tree-svg {
+  max-width: 100%;
+  max-height: 200px;
+  overflow: hidden;
+}
+
+.obir-tree-svg svg {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.obir-tree-loading, .obir-tree-error {
+  text-align: center;
+  color: #666;
+}
+
+.obir-tree-loading p, .obir-tree-error p {
+  margin: 0;
+  font-size: 16px;
+}
+
+.obir-tree-error {
+  color: #f44336;
 }
 .blank-image {
   max-width: 100%;
@@ -371,5 +600,131 @@ h3 {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+.component-area {
+  margin-top: 20px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+  min-height: 300px;
+}
+
+.component-area h5 {
+  margin: 0 0 16px 0;
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* 搜索结果框样式 */
+.search-results {
+  margin: 20px 0;
+  transition: all 0.3s ease;
+}
+
+.results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.results-header h3 {
+  margin: 0;
+  color: #333;
+}
+
+.toggle-btn {
+  padding: 8px 16px;
+  background: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s;
+}
+
+.toggle-btn:hover {
+  background: #45a049;
+}
+
+.results-content {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.results-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.result-item {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 15px;
+  transition: all 0.3s ease;
+}
+
+.result-item:hover {
+  background: #fff;
+  border-color: #4CAF50;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+.result-title {
+  margin: 0;
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.result-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+}
+
+.relevance {
+  color: #4CAF50;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.distance {
+  color: #666;
+  font-size: 12px;
+}
+
+.result-description {
+  margin: 0 0 10px 0;
+  color: #555;
+  line-height: 1.5;
+  font-size: 14px;
+}
+
+.result-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: #666;
+}
+
+.location, .type {
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 </style> 
