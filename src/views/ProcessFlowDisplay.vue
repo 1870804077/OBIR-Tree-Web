@@ -21,15 +21,15 @@
         <svg width="100%" height="234" viewBox="0 0 1200 234">
           <!-- 箭头定义 -->
           <defs>
-            <marker id="arrow-end" markerWidth="8" markerHeight="8" refX="8" refY="4" orient="auto">
-              <path d="M1,1 Q8,4 1,7 Q3,4 1,1" fill="#6ec6f7" />
+            <marker id="arrow-end" markerWidth="8" markerHeight="8" refX="0" refY="4" orient="auto">
+              <path d="M0,1 L8,4 L0,7 L2,4 Z" fill="#6ec6f7" />
             </marker>
-            <marker id="arrow-start" markerWidth="8" markerHeight="8" refX="10" refY="4" orient="auto">
-              <path d="M1,1 Q8,4 1,7 Q3,4 1,1" fill="#6ec6f7" />
+            <marker id="arrow-start" markerWidth="8" markerHeight="8" refX="8" refY="4" orient="auto">
+              <path d="M0,1 L8,4 L0,7 L2,4 Z" fill="#6ec6f7" />
             </marker>
           </defs>
           <!-- 主干三次贝塞尔曲线（首尾延伸，双箭头，左右拉伸） -->
-          <path d="M100,195 C290,13 970,273 1170,39" stroke="#6ec6f7" stroke-width="1.2" fill="none" marker-end="url(#arrow-end)" marker-start="url(#arrow-start)" />
+          <path d="M75,195 C265,13 945,273 1145,39" stroke="#6ec6f7" stroke-width="1.2" fill="none" marker-end="url(#arrow-end)" marker-start="url(#arrow-start)" />
           <!-- 节点与说明 -->
           <g v-for="(node, idx) in mindmapNodes" :key="node.name">
             <!-- 节点圆点（有边框），y坐标根据曲线计算 -->
@@ -44,17 +44,26 @@
             {{ tooltip.text }}
           </div>
         </transition>
-        <!-- 节点点击弹窗 -->
-        <div v-if="dialog.show" class="node-dialog-mask" @click.self="closeDialog">
-          <div class="node-dialog node-dialog-fixed node-dialog-absolute-center">
-            <h4>{{ dialog.node?.name }}</h4>
-            <div class="desc">{{ dialog.node?.desc }}</div>
-            <!-- 这里可扩展更多内容 -->
-            <button class="close-btn" @click="closeDialog">关闭</button>
+      </div>
+    </div>
+    <!-- 节点点击弹窗 - 移到页面最外层 -->
+    <teleport to="body">
+      <div v-if="popup.show" class="page-popup-mask" @click.self="closePopup">
+        <div class="page-popup">
+          <div class="popup-header">
+            <h4>{{ popup.node?.name }}</h4>
+            <button class="popup-close-btn" @click="closePopup">×</button>
+          </div>
+          <div class="popup-content">
+            <div class="desc">{{ popup.node?.desc }}</div>
+            <!-- 这里可以放置小流程图等组件 -->
+            <div class="component-placeholder">
+              <!-- 未来组件区域 -->
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </teleport>
   </div>
 </template>
 
@@ -92,10 +101,10 @@ function cubicBezier(t, p0, p1, p2, p3) {
   return {x, y};
 }
 const bezierPoints = [
-  {x: 100, y: 195}, // 起点（右移，便于箭头对齐第一个节点右侧）
-  {x: 290, y: 13}, // 控制点1整体左移30
-  {x: 970, y: 273}, // 控制点2整体左移30
-  {x: 1170, y: 39}  // 终点整体左移30
+  {x: 75, y: 195}, // 起点左移，延长左边线条
+  {x: 265, y: 13}, // 控制点1
+  {x: 945, y: 273}, // 控制点2
+  {x: 1145, y: 39}  // 终点
 ];
 const nodeCount = 9;
 // 节点分布在中间，间距自动拉开
@@ -151,12 +160,12 @@ function onSvgMouseMove(e) {
     tooltip.value.y = e.clientY + 10;
   }
 }
-const dialog = ref({ show: false, node: null });
+const popup = ref({ show: false, node: null });
 function onNodeClick(node) {
-  dialog.value = { show: true, node };
+  popup.value = { show: true, node };
 }
-function closeDialog() {
-  dialog.value = { show: false, node: null };
+function closePopup() {
+  popup.value = { show: false, node: null };
 }
 </script>
 
@@ -281,52 +290,86 @@ h3 {
 .fade-enter-from, .fade-leave-to {
   opacity: 0;
 }
-.node-dialog-mask {
-  position: fixed;
-  left: 0; top: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.25);
-  z-index: 100;
-}
-.node-dialog.node-dialog-fixed.node-dialog-absolute-center {
+.page-popup-mask {
   position: fixed !important;
-  left: 50% !important;
-  top: 50% !important;
-  transform: translate(-50%, -50%) !important;
-  z-index: 9999 !important;
+  left: 0 !important; 
+  top: 0 !important; 
+  right: 0 !important; 
+  bottom: 0 !important;
+  background: rgba(0,0,0,0.25);
+  z-index: 999999 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+.page-popup {
+  position: relative !important;
   background: #fff;
   border-radius: 12px;
-  box-shadow: 0 4px 24px #8884;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
   padding: 32px 36px 24px 36px;
-  min-width: 320px;
+  min-width: 500px;
   max-width: 90vw;
   max-height: 80vh;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  overflow: hidden;
+  z-index: 1000000 !important;
+  transform: translateZ(0);
+  will-change: transform;
 }
-.node-dialog h4 {
-  margin: 0 0 12px 0;
-  font-size: 20px;
+.popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #eee;
+}
+.popup-header h4 {
+  margin: 0;
+  font-size: 22px;
   color: #333;
+  font-weight: 600;
 }
-.node-dialog .desc {
-  font-size: 15px;
-  color: #555;
-  margin-bottom: 18px;
-  line-height: 1.7;
+.popup-content {
+  flex: 1;
+  overflow-y: auto;
 }
-.close-btn {
-  align-self: flex-end;
-  background: #409eff;
-  color: #fff;
+.popup-close-btn {
+  background: none;
   border: none;
-  border-radius: 6px;
-  padding: 6px 18px;
-  font-size: 15px;
+  font-size: 24px;
+  color: #999;
   cursor: pointer;
-  transition: background 0.2s;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
 }
-.close-btn:hover {
-  background: #3076c9;
+.popup-close-btn:hover {
+  background: #f0f0f0;
+  color: #666;
+}
+.component-placeholder {
+  margin-top: 20px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 2px dashed #dee2e6;
+  text-align: center;
+  color: #6c757d;
+  font-size: 14px;
+  min-height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 </style> 
