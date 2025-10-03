@@ -1,0 +1,83 @@
+{
+  "ir_nodes": [
+    {
+      "id": "ir_root",
+      "label": "IR_Root",
+      "type": "root"
+    },
+    {
+      "id": "ir_node1",
+      "label": "IR_Node1",
+      "type": "node"
+    },
+    {
+      "id": "ir_node2",
+      "label": "IR_Node2",
+      "type": "node"
+    },
+    {
+      "id": "ir_leaf1",
+      "label": "IR_Leaf1",
+      "type": "leaf"
+    },
+    {
+      "id": "ir_leaf2",
+      "label": "IR_Leaf2",
+      "type": "leaf"
+    }
+  ],
+  "obir_nodes": [
+    {
+      "id": "obir_root",
+      "label": "OBIR_Root",
+      "type": "root"
+    },
+    {
+      "id": "obir_node1",
+      "label": "OBIR_Node1",
+      "type": "node"
+    },
+    {
+      "id": "obir_node2",
+      "label": "OBIR_Node2",
+      "type": "node"
+    },
+    {
+      "id": "obir_leaf1",
+      "label": "OBIR_Leaf1",
+      "type": "leaf"
+    },
+    {
+      "id": "obir_leaf2",
+      "label": "OBIR_Leaf2",
+      "type": "leaf"
+    }
+  ],
+  "mappings": [
+    {
+      "ir_id": "ir_root",
+      "obir_id": "obir_root",
+      "label": "根节点映射"
+    },
+    {
+      "ir_id": "ir_node1",
+      "obir_id": "obir_node1",
+      "label": "节点1映射"
+    },
+    {
+      "ir_id": "ir_node2",
+      "obir_id": "obir_node2",
+      "label": "节点2映射"
+    },
+    {
+      "ir_id": "ir_leaf1",
+      "obir_id": "obir_leaf1",
+      "label": "叶子1映射"
+    },
+    {
+      "ir_id": "ir_leaf2",
+      "obir_id": "obir_leaf2",
+      "label": "叶子2映射"
+    }
+  ]
+} 

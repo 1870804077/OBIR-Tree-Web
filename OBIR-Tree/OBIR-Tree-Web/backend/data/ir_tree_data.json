@@ -1,0 +1,62 @@
+{
+  "nodes": [
+    {
+      "id": "root",
+      "label": "Root",
+      "type": "root",
+      "level": 0
+    },
+    {
+      "id": "node1",
+      "label": "Node1",
+      "type": "node",
+      "level": 1
+    },
+    {
+      "id": "node2",
+      "label": "Node2",
+      "type": "node",
+      "level": 1
+    },
+    {
+      "id": "leaf1",
+      "label": "Leaf1",
+      "type": "leaf",
+      "level": 2
+    },
+    {
+      "id": "leaf2",
+      "label": "Leaf2",
+      "type": "leaf",
+      "level": 2
+    },
+    {
+      "id": "leaf3",
+      "label": "Leaf3",
+      "type": "leaf",
+      "level": 2
+    }
+  ],
+  "edges": [
+    {
+      "from": "root",
+      "to": "node1"
+    },
+    {
+      "from": "root",
+      "to": "node2"
+    },
+    {
+      "from": "node1",
+      "to": "leaf1"
+    },
+    {
+      "from": "node1",
+      "to": "leaf2"
+    },
+    {
+      "from": "node2",
+      "to": "leaf3"
+    }
+  ]
+} 
