@@ -143,7 +143,7 @@
                       <div v-if="result.path_after" class="path-text-container">
                         <div class="path-text">{{ formatSinglePath(result.path_after) }}</div>
                         <div class="path-info">
-                          <span>深度: {{ Array.isArray(result.path_after) ? result.path_after.length : (result.path_after ? String(result.path_after).split('->').length : 0) }}</span>
+                          <!-- <span>深度: {{ Array.isArray(result.path_after) ? result.path_after.length : (result.path_after ? String(result.path_after).split('->').length : 0) }}</span> -->
                           <!-- <span>节点数: {{ Array.isArray(result.path_after) ? result.path_after.length : 0 }}</span> -->
                         </div>
                       </div>
@@ -151,18 +151,37 @@
                     </div>
                   </div>
                   <div class="path-stats">
-                    <div class="stat-item">
+                    <div class="result-chart">
+                      <!-- 显示加载状态 -->
+                      <div v-if="result.pathLoading" class="path-loading">
+                        路径数据加载中...
+                      </div>
+                      <PathComparisonChart 
+                        v-else-if="result.path_before && result.path_after"
+                        :key="'path-chart-' + index"
+                        :before-path="Array.isArray(result.path_before) ? result.path_before : result.path_before?.split('->').map(Number) || []" 
+                        :after-path="Array.isArray(result.path_after) ? result.path_after : result.path_after?.split('->').map(Number) || []" 
+                        :height="300"
+                        style="width: 100%"
+                      />
+                      <!-- 数据无效时显示提示 -->
+                      <div v-else class="path-loading">
+                        等待路径数据...
+                      </div>
+                    </div>   
+
+                    <!-- <div class="stat-item">
                       <span class="stat-label">节点访问次数:</span>
                       <span class="stat-value">{{ (result.path_before?.access_count ?? 0) + (result.path_after?.access_count ?? 0) }}</span>
-                    </div>
-                    <div class="stat-item">
+                    </div> -->
+                    <!-- <div class="stat-item">
                       <span class="stat-label">路径深度变化:</span>
                       <span class="stat-value">{{ ((result.path_after?.depth ?? 0) - (result.path_before?.depth ?? 0)) }}</span>
                     </div>
                     <div class="stat-item">
                       <span class="stat-label">加密操作次数:</span>
                       <span class="stat-value">{{ 0 }}</span>
-                    </div>
+                    </div> -->
                   </div>
                 </div>
               </div>
@@ -253,7 +272,7 @@ import IRTreeECharts from '@/components/IRTreeECharts.vue';
 // import { searchAPI } from '../api';
 import { mapBackendResultsToFrontend, calculatePathORAMStats, type BackendQueryResult, type FrontendSearchResult } from '../utils/dataMapper';
 import AccessTimesChart from '@/components/AccessTimesChart.vue';
-
+import  PathComparisonChart  from '@/components/PathComparisonChart.vue';
 
 const router = useRouter();
 
@@ -513,7 +532,8 @@ const executeFirstStageSearch = async () => {
         id: item.rect_id || 'N/A',
         showPathComparison: false,
         path_before: null,
-        path_after: null
+        path_after: null,
+        pathLoading: false // 初始化加载状态
       }));
       
       searchResults.value = processedResults;
@@ -567,6 +587,9 @@ const executeSecondStageSearch = async (cacheKey) => {
         }, 50);
       });
     }
+    searchResults.value.forEach(item => {
+      item.pathLoading = true;
+    });
     const trimmedKey = cacheKey.trim();
     const url = `http://localhost:8080/second-stage?cacheKey=${encodeURIComponent(trimmedKey)}`;
     console.log('第二阶段请求URL:', url);
@@ -586,14 +609,21 @@ const executeSecondStageSearch = async (cacheKey) => {
       searchResults.value.forEach((item, idx) => {
         item.path_before = Array.isArray(path_before) ? path_before[idx] : null;
         item.path_after = Array.isArray(path_after) ? path_after[idx] : null;
+        item.pathLoading = false; // 加载完成
       });
       console.log('第二阶段搜索成功！');
       console.log('搜索前路径:', path_before);
       console.log('搜索后路径:', path_after);
     } else {
       console.error('第二阶段搜索失败:', result.error || result.message || '未知错误');
+      searchResults.value.forEach(item => {
+        item.pathLoading = false;
+      });
     }
   } catch (err) {
+    searchResults.value.forEach(item => {
+      item.pathLoading = false;
+    });
     console.error('第二阶段搜索失败:', err);
     const errorMessage = err instanceof Error ? err.message : '第二阶段搜索过程中发生未知错误';
     console.error('详细错误信息:', errorMessage);
@@ -1462,6 +1492,7 @@ h3 {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  overflow: visible;
 }
 
 .path-text {
@@ -1577,4 +1608,12 @@ h3 {
   .result-item.searching {
     background: linear-gradient(135deg, #f0f8ff 0%, #e8f4f8 100%);
   }
+
+.result-chart {
+  margin: 12px 0;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid #eee;
+  width: 100%;
+}
 </style>

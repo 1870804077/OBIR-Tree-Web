@@ -57,6 +57,7 @@ declare module '@vue/runtime-core' {
     IRTreeVisualization: typeof import('./src/components/IRTreeVisualization.vue')['default']
     OBIRTreeRealtimeSVG: typeof import('./src/components/OBIRTreeRealtimeSVG.vue')['default']
     ObliviousAccessDisplay: typeof import('./src/components/ObliviousAccessDisplay.vue')['default']
+    PathComparisonChart: typeof import('./src/components/PathComparisonChart.vue')['default']
     PathORAMPathDialog: typeof import('./src/components/PathORAMPathDialog.vue')['default']
     QueryParamDisplay: typeof import('./src/components/QueryParamDisplay.vue')['default']
     QueryResultDisplay: typeof import('./src/components/QueryResultDisplay.vue')['default']

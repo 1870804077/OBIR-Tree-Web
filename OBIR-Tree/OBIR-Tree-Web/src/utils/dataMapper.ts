@@ -63,6 +63,7 @@ export interface FrontendSearchResult {
     accessCount?: number;
     target_id: number;
   };
+  pathLoading: boolean; // 新增：标记路径数据是否正在加载
 }
 
 /**
@@ -87,6 +88,7 @@ export function mapBackendResultsToFrontend(backendResults: BackendQueryResult[]
       type: result.type || '地理位置',
       pathId: result.pathId || `path_${result.id}_${index}`,
       showPathComparison: false, // 默认不展开路径对比
+      pathLoading: false, // 新增：标记路径数据是否正在加载
     };
 
     // 映射PathORAM路径信息
