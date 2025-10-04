@@ -3,10 +3,10 @@
 		<!-- /*这里的总条数是自己输入的，这里记得最后要改*/ -->
 		<div class="container">
 			<TableCustom :columns="columns" :tableData="tableData" :total="1000" :viewFunc="handleViewSimple"
-				:delFunc="handleDelete" :editFunc="handleEdit" :refresh="getData" :currentPage="page.index"
+				:editFunc="handleEdit" :refresh="getData" :currentPage="page.index"
 				:pageSize="page.size" :changePage="changePage">
 				<template #toolbarBtn>
-					<el-button type="warning" :icon="CirclePlusFilled" @click="visible = true">新增</el-button>
+					<!-- <el-button type="warning" :icon="CirclePlusFilled" @click="visible = true">新增</el-button> -->
 					<el-button type="primary" @click="showAllOnMap">在地图上显示</el-button>
 					<el-input v-model="query.value" placeholder="文本内容" style="width: 200px; margin-left: 10px;" />
 					<el-button type="success" @click="handleSearch" style="margin-left: 10px;">搜索</el-button>
@@ -23,6 +23,16 @@
 			</TableCustom>
 
 		</div>
+		<!-- 搜索结果弹窗 -->
+		<el-dialog title="搜索结果" v-model="searchVisible" width="1000px" destroy-on-close>
+			<el-table :data="searchResults" border>
+				<el-table-column prop="value" label="文本内容" />
+				<el-table-column label="坐标" >
+					<template #default="scope">({{ scope.row.longitude }}, {{ scope.row.latitude }})</template>
+				</el-table-column>
+				<el-table-column prop="encrypted_data" label="加密数据(前30位)" />
+			</el-table>
+		</el-dialog>
 		<el-dialog :title="isEdit ? '编辑' : '新增'" v-model="visible" width="700px" destroy-on-close
 			:close-on-click-modal="false" @close="closeDialog">
 			<TableEdit :form-data="rowData" :options="options" :edit="isEdit" :update="updateData">
@@ -37,7 +47,7 @@
 
 <script setup lang="ts" name="basetable">
 import { ref, reactive, onMounted } from 'vue';
-import { ElMessage, ElInput, ElButton } from 'element-plus';
+import { ElMessage, ElInput, ElButton, ElDialog, ElTable, ElTableColumn } from 'element-plus';
 import { CirclePlusFilled } from '@element-plus/icons-vue';
 import request from '@/utils/request';
 import TableCustom from '@/components/table-custom.vue';
@@ -53,8 +63,47 @@ const query = reactive({
 	value: '',
 });
 
-const handleSearch = () => {
-	changePage(1);
+// 搜索结果相关
+const searchVisible = ref(false);
+const searchResults = ref<TableItem[]>([]);
+const handleSearch = async () => {
+	if (!query.value.trim()) {
+		ElMessage.warning('请输入搜索内容');
+		return;
+	}
+	
+	try {
+		// 调用后端搜索API
+		
+		const response = await request.get('/search', {
+			params: {
+				keyword: query.value.trim()
+			}
+		});
+		
+		// 解析API返回结果
+		if (response.data.status === 'success') {
+			// 转换后端返回格式为前端需要的TableItem格式
+			searchResults.value = response.data.results.map((item: any) => ({
+				id: item.id,
+				value: item.keyword,
+				longitude: item.x,
+				latitude: item.y,
+				encrypted_data: generateMockData()[0].encrypted_data,
+				has_encrypted_data: !!item.encrypted
+			}));
+			
+			if (searchResults.value.length === 0) {
+				ElMessage.info('未找到匹配的搜索结果');
+			}
+			searchVisible.value = true;
+		} else {
+			ElMessage.error('搜索失败：' + (response.data.message || '未知错误'));
+		}
+	} catch (error) {
+		console.error('搜索请求出错：', error);
+		ElMessage.error('搜索请求失败，请稍后重试');
+	}
 };
 
 // 表格相关
@@ -64,7 +113,7 @@ let columns = ref([
 	{ prop: 'value', label: 'value' },
 	{ prop: 'coordinates', label: '坐标', slot: true },
 	{ prop: 'encrypted_data', label: '加密数据(前30位)', slot: true },
-	{ prop: 'operator', label: '操作', width: 250 },
+	{ prop: 'operator', label: '操作', width: 100 },
 ])
 const page = reactive({
 	index: 1,
@@ -106,17 +155,23 @@ const getData = async () => {
     }
 };
 
-// 生成模拟数据的函数
+// 修正模拟数据生成函数，确保包含加密数据且长度正确
 const generateMockData = () => {
     const mockData = [];
     const startIndex = (page.index - 1) * page.size;
     for (let i = 0; i < page.size; i++) {
         const id = startIndex + i + 1;
+        // 生成30位随机加密数据
+        const array = new Uint8Array(15); // 15字节 = 120位 = 30个十六进制字符
+        crypto.getRandomValues(array);
+        const encryptedData = Array.from(array, byte => byte.toString(16).padStart(2, '0').toUpperCase()).join('');
         mockData.push({
             id: id,
             value: `数据项${id}`,
             longitude: 108.9 + Math.random() * 0.2,
-            latitude: 34.2 + Math.random() * 0.2
+            latitude: 34.2 + Math.random() * 0.2,
+            encrypted_data: encryptedData,
+            has_encrypted_data: true
         });
     }
     return mockData;
@@ -209,8 +264,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-
-
 .container {
 	padding: 30px;
 	background-color: #fff;
@@ -226,4 +279,13 @@ onMounted(() => {
 	width: 40px;
 	height: 40px;
 }
+
+:deep(.el-dialog) {
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  margin: 0 !important;
+}
+
 </style>
