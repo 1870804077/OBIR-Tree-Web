@@ -10,25 +10,11 @@
         <button class="search-button" disabled>在地图上显示</button>
       </div>
     </div>
-
-    <!-- 访问次数条形图 -->
-    <div class="section access-times-chart">
-      <h3>块访问次数统计</h3>
-      <div class="chart-container">
-        <AccessTimesChart 
-          dataType="multiple" 
-          title="块访问次数统计"
-          :start="1"
-          :end="1000"
-        />
-      </div>
-    </div>
-
-    
+   
     <div class="section process-node-graph">
       <h3>检索流程节点图</h3>
       <div class="graph-placeholder" @mousemove="onSvgMouseMove" @mouseleave="hideTooltip">
-        <svg width="100%" height="320" viewBox="0 0 1200 320">
+        <svg width="100%" height="270" viewBox="0 50 1200 270">
           <!-- 箭头定义 -->
           <defs>
             <marker id="arrow-end" markerWidth="8" markerHeight="8" refX="0" refY="4" orient="auto">
@@ -54,6 +40,19 @@
             {{ tooltip.text }}
           </div>
         </transition>
+      </div>
+    </div>
+
+    <!-- 访问次数条形图 -->
+    <div class="section access-times-chart">
+      <h3>块访问次数统计</h3>
+      <div class="chart-container">
+        <AccessTimesChart 
+          dataType="multiple" 
+          title="块访问次数统计"
+          :start="1"
+          :end="1000"
+        />
       </div>
     </div>
 
@@ -640,9 +639,58 @@ const closeSearchResults = () => {
   searchResults.value = [];
 };
 
-// 跳转到OBIR-Tree展示页面
+// 跳转到地图展示页面，显示搜索目标点和结果点
 const goToOBIRTreePage = () => {
-  router.push('/obir-tree-display');
+  try {
+    // 准备地图数据
+    const mapData = [];
+    
+    // 添加搜索目标点（如果有效）
+    const longitude = parseFloat(lng.value);
+    const latitude = parseFloat(lat.value);
+    if (!isNaN(longitude) && !isNaN(latitude)) {
+      mapData.push({
+        lng: longitude,
+        lat: latitude,
+        type: 'target',
+        title: '搜索目标点',
+        keyword: searchText.value || '未知关键词'
+      });
+    }
+    
+    // 添加搜索结果点
+    searchResults.value.forEach((result, index) => {
+      const resultLng = parseFloat(String(result.lng));
+      const resultLat = parseFloat(String(result.lat));
+      
+      if (!isNaN(resultLng) && !isNaN(resultLat)) {
+        mapData.push({
+          lng: resultLng,
+          lat: resultLat,
+          type: 'result',
+          title: result.title || `结果${index + 1}`,
+          id: result.id,
+          weighted_dist: result.weighted_dist,
+          original_dist: result.original_dist,
+          lev_distance: result.lev_distance
+        });
+      }
+    });
+    
+    console.log('准备传递给地图的数据:', mapData);
+    
+    // 通过sessionStorage传递数据
+    if (mapData.length > 0) {
+      sessionStorage.setItem('mapSearchData', JSON.stringify(mapData));
+      console.log('已将搜索数据存储到sessionStorage');
+    }
+    
+    // 跳转到地图页面
+    router.push('/project-search/map');
+  } catch (error) {
+    console.error('跳转到地图页面时出错:', error);
+    alert('跳转到地图页面失败，请重试');
+  }
 };
 
 // IR-Tree数据加载（改用统一接口，无兜底）

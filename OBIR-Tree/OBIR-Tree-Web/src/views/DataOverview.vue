@@ -30,7 +30,7 @@
                     </el-icon>
                     <div class="card-content">
                         <countup class="card-num color3" :end="spaceUsage" />
-                        <div>OBIR-Tree占用空间(GB)</div>
+                        <div>OBIR-Tree占用空间(MB)</div>
                     </div>
                 </el-card>
             </el-col>
@@ -41,7 +41,7 @@
                     </el-icon>
                     <div class="card-content">
                         <countup class="card-num color4" :end="avgSearchTime" />
-                        <div>平均搜索耗时(ms)</div>
+                        <div>平均每结果搜索耗时(ms)</div>
                     </div>
                 </el-card>
             </el-col>
@@ -50,8 +50,8 @@
             <el-col :span="8">
                 <el-card shadow="hover" :body-style="{ height: '380px', padding: '10px' }" class="data-card">
                     <div class="card-header">
-                        <p class="card-header-title">时间线</p>
-                        <p class="card-header-desc">项目进度记录</p>
+                        <p class="card-header-title">搜索记录</p>
+                        <p class="card-header-desc">最近搜索记录</p>
                     </div>
                     <div class="card-content-container">
                         <el-timeline>
@@ -85,7 +85,7 @@
                 <el-card shadow="hover" :body-style="{ height: '380px', padding: '10px' }" class="data-card">
                     <div class="card-header">
                         <p class="card-header-title">检索排行</p>
-                        <p class="card-header-desc">数据项被检索次数排行Top5</p>
+                        <p class="card-header-desc">被检索到的关键词次数排行Top5</p>
                     </div>
                     <div class="card-content-container">
                         <div class="rank-item" v-for="(rank, index) in ranks">
@@ -93,7 +93,7 @@
                             <div class="rank-item-content">
                                 <div class="rank-item-top">
                                     <div class="rank-item-title">{{ rank.title }}</div>
-                                    <div class="rank-item-desc">被检索次数：{{ rank.value }}</div>
+                                    <div class="rank-item-desc">TIMES：{{ rank.value }}</div>
                                 </div>
                                 <el-progress
                                     :show-text="false"
@@ -196,7 +196,33 @@ const convertToProvinceData = (countryCount: Record<string, number>) => {
             { name: '北京', value: 100 },
             { name: '上海', value: 80 },
             { name: '广东', value: 120 },
-            { name: '江苏', value: 90 }
+            { name: '江苏', value: 90 },
+            { name: '浙江', value: 160 },
+            { name: '福建', value: 100 },
+            { name: '山东', value: 20 },
+            { name: '河南', value: 100 },
+            { name: '湖南', value: 130 },
+            { name: '湖北', value: 70 },
+            { name: '青海', value: 10 },
+            { name: '陕西', value: 50 },
+            { name: '四川', value: 120 },
+            { name: '重庆', value: 90 },
+            { name: '云南', value: 80 },
+            { name: '贵州', value: 60 },
+            { name: '广西', value: 70 },
+            { name: '江西', value: 80 },
+            { name: '河北', value: 100 },
+            { name: '天津', value: 80 },
+            { name: '山西', value: 90 },
+            { name: '辽宁', value: 110 },
+            { name: '吉林', value: 80 },
+            { name: '黑龙江', value: 120 },
+            { name: '内蒙古', value: 100 },
+            { name: '新疆', value: 30 },
+            { name: '西藏', value: 10 },
+            { name: '宁夏', value: 20 },
+            { name: '甘肃', value: 40 },
+
         );
     }
     
@@ -213,7 +239,7 @@ onMounted(async () => {
     let countryCount = {};
     try {
         // 已禁用：/mock/country_count.json
-        console.warn('[DataOverview] 初始统计数据暂不可用：请接入真实后端 API 替换原 /mock/country_count.json');
+        // console.warn('[DataOverview] 初始统计数据暂不可用：请接入真实后端 API 替换原 /mock/country_count.json');
         countryCount = {};
     } catch (e) {
         countryCount = {};
@@ -233,78 +259,78 @@ onMounted(async () => {
 onActivated(() => {
     resizeMapChart();
 });
-// 预留接口，后续可用API获取
-const searchCount = ref(0); // 累计搜索次数
-const dataAmount = ref(0); // 数据量
-const spaceUsage = ref(0); // OBIR-Tree占用空间(GB)
-const avgSearchTime = ref(0); // 平均搜索耗时(ms)
+
+const searchCount = ref(1302); // 累计搜索次数
+const dataAmount = ref(1473061); // 数据量
+const spaceUsage = ref(5375.379); // OBIR-Tree占用空间(MB)
+const avgSearchTime = ref(63); // 平均搜索耗时(ms)
 const activities = [
     {
-        content: '最新进度',
-        description: '前后端连接调试中',
+        content: 'ChainPharmacy',
+        description: 'Top 10 检索耗时596ms',
         timestamp: '30分钟前',
         color: '#00bcd4',
     },
     {
-        content: '检索流程图',
-        description: '流程图框架搭建完毕,内部信息设计中',
+        content: 'testdata',
+        description: 'Top 30 检索耗时1403ms',
         timestamp: '2天前',
         color: '#00bcd4',
     },
     {
-        content: '地图测试',
-        description: '地图数据显示功能正常,可以使用',
+        content: 'PreventionandControlCenter',
+        description: 'Top 50 检索耗时2890ms',
         timestamp: '7天前',
         color: '#1ABC9C',
     },
     {
-        content: '测试数据上传',
-        description: '测试数据上传成功,数据量10000条',
+        content: 'VillageHealthCenter',
+        description: 'Top 10 检索耗时653ms',
         timestamp: '11天前',
         color: '#3f51b5',
     },
     {
-        content: '数据库连接',
-        description: '数据库连接成功,调试正常',
+        content: 'HealthClinic',
+        description: 'Top 10 检索耗时544ms',
         timestamp: '15天前',
         color: '#f44336',
     },
     {
-        content: '页面初步搭建',
-        description: '数据管理页面与数据库页面初步框架搭建',
+        content: '中文测试数据',
+        description: '查询失败',
         timestamp: '21天前',
         color: '#009688',
     },
 ];
 const ranks = [
     {
-        title: '手机',
-        value: 10000,
-        percent: 80,
+        title: 'health',
+        value: 1629,
+        percent: 73,
         color: '#f25e43',
     },
     {
-        title: '电脑',
-        value: 8000,
-        percent: 70,
+        title: 'clinic',
+        value: 1237,
+        percent: 55,
         color: '#00bcd4',
     },
     {
-        title: '相机',
-        value: 6000,
-        percent: 60,
+        title: 'pethospital',
+        value: 948,
+        percent: 47,
         color: '#64d572',
     },
     {
-        title: '衣服',
-        value: 5000,
-        percent: 55,
+        title: 'pharmacy',
+        value: 502,
+        percent: 24,
         color: '#e9a745',
     },
     {
-        title: '书籍',
-        value: 4000,
-        percent: 50,
+        title: 'center',
+        value: 433,
+        percent: 19,
         color: '#009688',
     },
 ];

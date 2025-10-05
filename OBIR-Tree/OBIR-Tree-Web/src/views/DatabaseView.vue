@@ -241,21 +241,63 @@ const handleViewSimple = (row: TableItem) => {
   });
 };
 
-// 删除相关
-const handleDelete = (row: TableItem) => {
-	ElMessage.success('删除成功');
-}
-
 const showAllOnMap = async () => {
-  // 已禁用：历史演示的 mock points.json。保留跳转入口但不传点位。
+  // 直接读取预生成的points.json，提升性能
   try {
-    console.warn('[DatabaseView] points 显示暂不可用：请接入真实后端 API 替换原 /mock/points.json');
-  } catch (e) {
-    console.error('无法获取后端的返回结果，错误为', e);
+    console.log('开始加载地图数据...');
+    const res = await fetch('/mock/points.json');
+    
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    }
+    
+    const points = await res.json();
+    console.log('原始数据加载完成，点数量:', points.length);
+    
+    // 验证数据格式
+    if (!Array.isArray(points) || points.length === 0) {
+      ElMessage.error('地图数据为空或格式错误');
+      return;
+    }
+    
+    // 验证数据结构
+    const validPoints = points.filter(point => 
+      point && 
+      typeof point.lng === 'number' && 
+      typeof point.lat === 'number' && 
+      !isNaN(point.lng) && 
+      !isNaN(point.lat)
+    );
+    
+    if (validPoints.length === 0) {
+      ElMessage.error('没有找到有效的地理坐标数据');
+      return;
+    }
+    
+    console.log(`准备显示 ${validPoints.length} 个地理位置点`);
+    console.log('前5个点的数据:', validPoints.slice(0, 5));
+    
+    // 使用sessionStorage传递大量数据，避免URL长度限制
+    sessionStorage.setItem('mapPoints', JSON.stringify(validPoints));
+    console.log('数据已存储到sessionStorage');
+    
+    // 跳转到地图页面，使用标识参数表示需要显示所有点
+    router.push({
+      path: '/project-search/map',
+      query: {
+        showAll: 'true',
+        count: validPoints.length.toString()
+      }
+    });
+    
+  } catch (error) {
+    console.error('加载地图数据失败:', error);
+    if (error instanceof TypeError) {
+      ElMessage.error('地图数据格式错误，请检查points.json');
+    } else {
+      ElMessage.error('加载地图数据失败，请稍后重试');
+    }
   }
-  router.push({
-    path: '/project-search/map'
-  });
 };
 
 onMounted(() => {

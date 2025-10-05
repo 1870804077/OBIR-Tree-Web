@@ -309,15 +309,15 @@ export const mapOptions: EChartsOption = {
         left: 'left',
         top: 'bottom',
         text: ['高', '低'],
-        calculable: true,
+        calculable: false,
         inRange: {
             color: ['#e0f3ff', '#006edd']
         }
     },
     geo: {
         map: 'china',
-        roam: false,
-        center: [100, 36], // 进一步向右移动地图
+        roam: true,
+        center: [100, 30], // 进一步向右移动地图
         label: {
             emphasis: {
                 show: false

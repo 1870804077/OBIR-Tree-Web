@@ -69,22 +69,73 @@ const clearMarkers = () => {
 };
 
 const addBatchMarkers = (pointsArr: Array<{lng: number, lat: number}>) => {
-  if (!Array.isArray(pointsArr) || pointsArr.length === 0) return;
+  if (!Array.isArray(pointsArr) || pointsArr.length === 0) {
+    console.warn('addBatchMarkers: 点数据为空或格式错误');
+    return;
+  }
+  
+  if (!map.value) {
+    console.error('addBatchMarkers: 地图未初始化');
+    return;
+  }
+  
+  console.log(`addBatchMarkers: 准备添加 ${pointsArr.length} 个点`);
   clearMarkers();
+  
+  // 验证并过滤有效坐标
+  const validPoints = pointsArr.filter(point => {
+    const isValid = point && 
+                   typeof point.lng === 'number' && 
+                   typeof point.lat === 'number' && 
+                   !isNaN(point.lng) && 
+                   !isNaN(point.lat) &&
+                   point.lng >= -180 && point.lng <= 180 &&
+                   point.lat >= -90 && point.lat <= 90;
+    if (!isValid) {
+      console.warn('无效坐标点:', point);
+    }
+    return isValid;
+  });
+  
+  if (validPoints.length === 0) {
+    console.error('addBatchMarkers: 没有有效的坐标点');
+    return;
+  }
+  
+  console.log(`addBatchMarkers: 有效点数量 ${validPoints.length}`);
+  
   // 构造百度地图Point数组
-  const bPoints = pointsArr.map(({lng, lat}) => new BMap.Point(lng, lat));
-  // 配置样式
+  const bPoints = validPoints.map(({lng, lat}) => new BMap.Point(lng, lat));
+  
+  // 配置样式 - 使用更明显的红色点
   const options = {
-    size: 3, // 3像素
+    size: 3, // 增大到5像素
     shape: BMap?.POINT_SHAPE_CIRCLE || 0,
-    color: '#cccccc' // 浅灰色
+    color: '#C0C0C0' // 改为灰色，更容易看到
   };
+  
   // 创建海量点覆盖物
   const pointCollection = new BMap.PointCollection(bPoints, options);
   map.value.addOverlay(pointCollection);
   markers.push(pointCollection);
-  // 缩放到全国
-  map.value.centerAndZoom(new BMap.Point(104.114129, 37.550339), 5);
+  
+  console.log('addBatchMarkers: 点已添加到地图');
+  
+  // 计算边界并自动缩放到合适的视野
+  if (validPoints.length > 0) {
+    const bounds = new BMap.Bounds();
+    validPoints.forEach(({lng, lat}) => {
+      bounds.extend(new BMap.Point(lng, lat));
+    });
+    
+    // 如果只有一个点，使用固定缩放级别
+    if (validPoints.length === 1) {
+      map.value.centerAndZoom(new BMap.Point(validPoints[0].lng, validPoints[0].lat), 12);
+    } else {
+      // 多个点时自动适应边界
+      map.value.setViewport(bounds, {margins: [50, 50, 50, 50]});
+    }
+  }
 };
 
 const loadMapScript = (): Promise<void> => {
@@ -137,6 +188,124 @@ onMounted(async () => {
   try {
     await loadMapScript();
     initMap();
+    
+    // 优先检查sessionStorage中的搜索数据（新增）
+    const searchDataStr = sessionStorage.getItem('mapSearchData');
+    if (searchDataStr) {
+      try {
+        const searchData = JSON.parse(searchDataStr);
+        console.log('从sessionStorage获取搜索数据:', searchData);
+        
+        if (Array.isArray(searchData) && searchData.length > 0) {
+          clearMarkers();
+          
+          // 分别处理目标点和结果点
+          const targetPoints = searchData.filter(item => item.type === 'target');
+          const resultPoints = searchData.filter(item => item.type === 'result');
+          
+          // 添加目标点（红色大圆点）
+          targetPoints.forEach(target => {
+            const point = new BMap.Point(target.lng, target.lat);
+            // 创建红色目标点图标
+            const svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20">
+              <circle cx="10" cy="10" r="8" fill="#ff1744" stroke="#ffffff" stroke-width="2"/>
+              <circle cx="10" cy="10" r="3" fill="#ffffff"/>
+            </svg>`;
+            const icon = new BMap.Icon(
+              'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgIcon),
+              new BMap.Size(20, 20),
+              { anchor: new BMap.Size(10, 10) }
+            );
+            const marker = new BMap.Marker(point, { icon });
+            
+            // 添加信息窗口
+            const infoWindow = new BMap.InfoWindow(`
+              <div style="padding: 5px;">
+                <strong>搜索目标点</strong><br/>
+                关键词: ${target.keyword}<br/>
+                坐标: (${target.lng}, ${target.lat})
+              </div>
+            `);
+            marker.addEventListener('click', () => {
+              map.value.openInfoWindow(infoWindow, point);
+            });
+            
+            map.value.addOverlay(marker);
+            markers.push(marker);
+          });
+          
+          // 添加结果点（蓝色小圆点）
+          resultPoints.forEach((result, index) => {
+            const point = new BMap.Point(result.lng, result.lat);
+            // 创建蓝色结果点图标
+            const svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14">
+              <circle cx="7" cy="7" r="5" fill="#2196f3" stroke="#ffffff" stroke-width="1"/>
+              <circle cx="7" cy="7" r="2" fill="#ffffff"/>
+            </svg>`;
+            const icon = new BMap.Icon(
+              'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgIcon),
+              new BMap.Size(14, 14),
+              { anchor: new BMap.Size(7, 7) }
+            );
+            const marker = new BMap.Marker(point, { icon });
+            
+            // 添加信息窗口
+            const infoWindow = new BMap.InfoWindow(`
+              <div style="padding: 5px;">
+                <strong>${result.title}</strong><br/>
+                ID: ${result.id}<br/>
+                坐标: (${result.lng}, ${result.lat})<br/>
+                ${result.weighted_dist ? `综合距离: ${result.weighted_dist.toFixed(5)}<br/>` : ''}
+                ${result.original_dist ? `空间距离: ${result.original_dist.toFixed(2)}<br/>` : ''}
+                ${result.lev_distance ? `文本距离: ${result.lev_distance.toFixed(2)}` : ''}
+              </div>
+            `);
+            marker.addEventListener('click', () => {
+              map.value.openInfoWindow(infoWindow, point);
+            });
+            
+            map.value.addOverlay(marker);
+            markers.push(marker);
+          });
+          
+          // 自动调整地图视野以包含所有点
+          if (searchData.length > 0) {
+            const allPoints = searchData.map(item => new BMap.Point(item.lng, item.lat));
+            const viewport = map.value.getViewport(allPoints);
+            map.value.centerAndZoom(viewport.center, viewport.zoom);
+          }
+          
+          // 清理sessionStorage中的数据
+          sessionStorage.removeItem('mapSearchData');
+          return;
+        }
+      } catch (parseError) {
+        console.error('解析sessionStorage中的搜索数据失败:', parseError);
+        searchError.value = '搜索数据解析失败';
+      }
+    }
+    
+    // 检查是否需要显示所有点（从sessionStorage获取数据）
+    if (route.query.showAll === 'true') {
+      const storedPoints = sessionStorage.getItem('mapPoints');
+      if (storedPoints) {
+        try {
+          const pointsArr = JSON.parse(storedPoints);
+          console.log(`从sessionStorage加载了 ${pointsArr.length} 个地理位置点`);
+          addBatchMarkers(pointsArr);
+          // 清理sessionStorage中的数据
+          sessionStorage.removeItem('mapPoints');
+          return;
+        } catch (parseError) {
+          console.error('解析sessionStorage中的地图数据失败:', parseError);
+          searchError.value = '地图数据解析失败';
+        }
+      } else {
+        console.warn('未找到sessionStorage中的地图数据');
+        searchError.value = '未找到地图数据';
+      }
+    }
+    
     // 优先检查是否有lng/lat参数（单点高亮）
     const lngParam = Number(route.query.lng);
     const latParam = Number(route.query.lat);
@@ -170,17 +339,22 @@ onMounted(async () => {
       map.value.centerAndZoom(point, 5);
       return;
     }
-    // 检查路由参数points（批量点）
+    
+    // 检查路由参数points（批量点）- 保持向后兼容
     if (route.query.points) {
       let pointsArr = [];
       try {
         pointsArr = JSON.parse(route.query.points as string);
-      } catch {}
+        console.log(`从URL参数加载了 ${pointsArr.length} 个地理位置点`);
+      } catch (parseError) {
+        console.error('解析URL参数中的地图数据失败:', parseError);
+        searchError.value = '地图数据解析失败';
+      }
       addBatchMarkers(pointsArr);
     }
   } catch (error) {
     searchError.value = '地图加载失败';
-    console.error(error);
+    console.error('地图初始化失败:', error);
   }
 });
 
@@ -251,4 +425,4 @@ onUnmounted(() => {
   padding: 10px;
   text-align: center;
 }
-</style> 
+</style>
