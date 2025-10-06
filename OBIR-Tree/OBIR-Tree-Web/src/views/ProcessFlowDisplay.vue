@@ -213,12 +213,58 @@
               <IRTreeECharts :key="irTreeKey" />
             </div>
             <div v-else-if="popup.node?.name === 'SGX密钥管理与索引映射'" class="component-area">
-              <h5>IR-OBIR关系图</h5>
-              <IR_OBIR_RelationSVG :key="irObirKey" />
+              <h5>映射关系图</h5>
+              <!-- 使用Echarts绘制position_map的映射散点图 -->
+              <div v-if="initInfoData && initInfoData.position_map" class="position-map-chart">
+                <div ref="positionMapChart" style="width: 100%; height: 400px;"></div>
+              </div>
+              
+              <!-- 如果数据还未加载，显示提示 -->
+              <div v-if="!initInfoData || !initInfoData.position_map" class="loading-hint">
+                <p>请先执行搜索以加载position_map数据</p>
+              </div>
             </div>
             <div v-else-if="popup.node?.name === '数据加密存储'" class="component-area">
               <h5>存储状态</h5>
-              <StorageStatusDisplay />
+              <!-- 显示init-info接口返回的信息（除status、position_map外） -->
+              <div v-if="initInfoData" class="init-info-section">
+                <h6>初始化信息</h6>
+                <div class="info-grid">
+                  <div v-for="(value, key) in getFilteredInitInfo()" :key="key" class="info-item">
+                    <span class="info-label">{{ key }}:</span>
+                    <span class="info-value">{{ formatInfoValue(value) }}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- 显示oram-info的原始数据与加密数据对（约100对） -->
+              <div v-if="oramInfoData && oramInfoData.blocks_encry_info" class="oram-data-section">
+                <h6>ORAM原始数据与加密数据对（前100对）</h6>
+                <div class="data-pairs-container">
+                  <div 
+                    v-for="(block, index) in getOramDataPairs()" 
+                    :key="index" 
+                    class="data-pair"
+                  >
+                    <div class="pair-header">数据对 {{ index + 1 }}</div>
+                    <div class="pair-content">
+                      <div class="original-data">
+                        <span class="data-label">原始数据:</span>
+                        <span class="data-value">{{ block.original_data || 'N/A' }}</span>
+                      </div>
+                      <div class="encrypted-data">
+                        <span class="data-label">加密数据:</span>
+                        <span class="data-value">{{ block.encrypted_data_prefix || 'N/A' }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- 如果数据还未加载，显示提示 -->
+              <div v-if="!initInfoData || !oramInfoData" class="loading-hint">
+                <p>请先执行搜索以加载相关数据</p>
+              </div>
             </div>
             <div v-else-if="popup.node?.name === '用户加密查询请求'" class="component-area">
               <h5>查询参数</h5>
@@ -362,6 +408,10 @@ const pathORAMStats = ref({
   nodeChange: '+12/-8',
   searchTime: 245
 });
+
+// 存储init-info和oram-info接口返回的数据
+const initInfoData = ref(null);
+const oramInfoData = ref(null);
 
 // // 加载OBIR-Tree SVG
 // const loadOBIRTreeSVG = async () => {
@@ -567,6 +617,62 @@ const resetAccessTimesSnapshot = () => {
   accessTimesSnapshot.value = null; // 清空快照
 };
 
+// 调用初始化信息查询接口
+const fetchInitInfo = async () => {
+  try {
+    const response = await fetch('http://localhost:8080/init-info', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    console.log('初始化信息查询结果:', result);
+    
+    if (result.status === 'success') {
+      initInfoData.value = result;
+      console.log('初始化信息已存储');
+    } else {
+      console.error('初始化信息查询失败:', result.error);
+    }
+  } catch (err) {
+    console.error('调用初始化信息查询接口失败:', err);
+  }
+};
+
+// 调用ORAM信息查询接口
+const fetchOramInfo = async () => {
+  try {
+    const response = await fetch('http://localhost:8080/oram-info', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    console.log('ORAM信息查询结果:', result);
+    
+    if (result.status === 'success') {
+      oramInfoData.value = result;
+      console.log('ORAM信息已存储');
+    } else {
+      console.error('ORAM信息查询失败:', result.error);
+    }
+  } catch (err) {
+    console.error('调用ORAM信息查询接口失败:', err);
+  }
+};
+
 // 执行第二阶段搜索
 const executeSecondStageSearch = async (cacheKey) => {
   try {
@@ -613,6 +719,12 @@ const executeSecondStageSearch = async (cacheKey) => {
       console.log('第二阶段搜索成功！');
       console.log('搜索前路径:', path_before);
       console.log('搜索后路径:', path_after);
+      
+      // 搜索完成后调用初始化信息查询和ORAM信息查询接口
+      console.log('开始调用初始化信息查询和ORAM信息查询接口...');
+      await fetchInitInfo();
+      await fetchOramInfo();
+      console.log('初始化信息查询和ORAM信息查询接口调用完成');
     } else {
       console.error('第二阶段搜索失败:', result.error || result.message || '未知错误');
       searchResults.value.forEach(item => {
@@ -798,11 +910,98 @@ const popup = ref({ show: false, node: null });
 
 function onNodeClick(node) {
   popup.value = { show: true, node };
+  
+  // 如果是SGX密钥管理与索引映射节点，延迟绘制散点图
+  if (node.name === 'SGX密钥管理与索引映射') {
+    nextTick(() => {
+      drawPositionMapChart();
+    });
+  }
 }
 
 function closePopup() {
   popup.value = { show: false, node: null };
 }
+
+// 获取过滤后的初始化信息（除status、position_map外）
+const getFilteredInitInfo = () => {
+  if (!initInfoData.value) return {};
+  
+  const filtered = { ...initInfoData.value };
+  delete filtered.status;
+  delete filtered.position_map;
+  
+  return filtered;
+};
+
+// 格式化信息值显示
+const formatInfoValue = (value) => {
+  if (typeof value === 'object' && value !== null) {
+    return JSON.stringify(value, null, 2);
+  }
+  return String(value);
+};
+
+// 获取ORAM数据对（前100对）
+const getOramDataPairs = () => {
+  if (!oramInfoData.value || !oramInfoData.value.blocks_encry_info) return [];
+  
+  const blocks = oramInfoData.value.blocks_encry_info;
+  return blocks.slice(0, 100); // 取前100对
+};
+
+// 绘制position_map散点图
+const positionMapChart = ref(null);
+const drawPositionMapChart = () => {
+  if (!positionMapChart.value || !initInfoData.value || !initInfoData.value.position_map) return;
+  
+  const chart = echarts.init(positionMapChart.value);
+  const positionMap = initInfoData.value.position_map;
+  
+  // 准备散点图数据：[下标i, position_map[i]]
+  const scatterData = positionMap.map((value, index) => [index, value]);
+  
+  const option = {
+    title: {
+      text: '映射关系图',
+      left: 'center'
+    },
+    tooltip: {
+      trigger: 'item',
+      formatter: function(params) {
+        return `下标: ${params.data[0]}<br/>映射值: ${params.data[1]}`;
+      }
+    },
+    xAxis: {
+      type: 'value',
+      name: '下标 i',
+      nameLocation: 'middle',
+      nameGap: 30
+    },
+    yAxis: {
+      type: 'value',
+      name: 'position_map[i]',
+      nameLocation: 'middle',
+      nameGap: 50
+    },
+    series: [{
+      name: '映射关系',
+      type: 'scatter',
+      data: scatterData,
+      symbolSize: 3,
+      itemStyle: {
+        color: '#5470c6'
+      }
+    }]
+  };
+  
+  chart.setOption(option);
+  
+  // 监听窗口大小变化
+  window.addEventListener('resize', () => {
+    chart.resize();
+  });
+};
 
 </script>
 
@@ -1508,7 +1707,6 @@ h3 {
   color: #333;
   font-size: 16px;
   font-weight: 600;
-  text-align: center;
 }
 
 .path-comparison-content {
@@ -1663,5 +1861,111 @@ h3 {
   overflow: hidden;
   border: 1px solid #eee;
   width: 100%;
+}
+
+/* 新增样式：初始化信息和ORAM数据显示 */
+.init-info-section, .oram-data-section {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.init-info-section h6, .oram-data-section h6 {
+  margin: 0 0 15px 0;
+  color: #495057;
+  font-weight: 600;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 10px;
+}
+
+.info-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 8px;
+  background-color: white;
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+}
+
+.info-label {
+  font-weight: 600;
+  color: #6c757d;
+  min-width: 120px;
+  margin-right: 10px;
+}
+
+.info-value {
+  flex: 1;
+  word-break: break-all;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+}
+
+.data-pairs-container {
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+}
+
+.data-pair {
+  border-bottom: 1px solid #e9ecef;
+  padding: 10px;
+}
+
+.data-pair:last-child {
+  border-bottom: none;
+}
+
+.pair-header {
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.pair-content {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.original-data, .encrypted-data {
+  display: flex;
+  align-items: flex-start;
+}
+
+.data-label {
+  font-weight: 500;
+  color: #6c757d;
+  min-width: 80px;
+  margin-right: 10px;
+}
+
+.data-value {
+  flex: 1;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  word-break: break-all;
+  background-color: #f8f9fa;
+  padding: 2px 4px;
+  border-radius: 2px;
+}
+
+.loading-hint {
+  text-align: center;
+  padding: 40px;
+  color: #6c757d;
+  font-style: italic;
+}
+
+.position-map-chart {
+  margin-top: 15px;
 }
 </style>
